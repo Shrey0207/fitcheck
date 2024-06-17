@@ -43,26 +43,68 @@ class Person:
             color = 'Red'
         return bmi_string, category, color
 
-    def calculate_bmr(self):
-        if self.gender == 'Male':
-            bmr = 10 * self.weight + 6.25 * self.height - 5 * self.age + 5
-        else:
-            bmr = 10 * self.weight + 6.25 * self.height - 5 * self.age - 161
-        return bmr
-
-    def calories_calculator(self):
-        activities = ['Little/no exercise', 'Light exercise', 'Moderate exercise (3-5 days/wk)', 'Very active (6-7 days/wk)', 'Extra active (very active & physical job)']
-        weights = [1.2, 1.375, 1.55, 1.725, 1.9]
-        weight_factor = weights[activities.index(self.activity)]
-        maintain_calories = self.calculate_bmr() * weight_factor
-        return maintain_calories
 
 # Configure Google Generative AI
 API_KEY = "AIzaSyAo9yfpvJACfzgxPyX3cj3FkSoV4wUy3nY"
 genai.configure(api_key=API_KEY)
 
-# Navigation Bar
-page = st.sidebar.selectbox("Navigation", ["Home", "Obesity Prediction", "Calories Calculator", "About Us"])
+# Navigation Tabs
+st.markdown(
+    """
+    <style>
+        @media (max-width: 600px) {
+            .main .block-container {
+                padding: 0 1rem;
+            }
+            .stButton button {
+                display: block;
+                width: 100%;
+            }
+        }
+        .nav-tabs {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: space-around;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 20px;
+        }
+        .nav-tabs a {
+            display: inline-block;
+            padding: 10px 15px;
+            margin-right: 2px;
+            line-height: 1.5;
+            border: 1px solid transparent;
+            border-radius: 3px;
+            color: #007bff;
+            text-decoration: none;
+        }
+        .nav-tabs a.active {
+            color: #495057;
+            background-color: #fff;
+            border-color: #dee2e6 #dee2e6 #fff;
+        }
+        .nav-tabs a:hover {
+            border-color: #e9ecef #e9ecef #dee2e6;
+        }
+        .metric-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: space-around;
+        }
+        .metric-container > div {
+            flex: 1 1 calc(25% - 10px);
+            min-width: 150px;
+        }
+        .stMetric .stMetric-value {
+            font-size: 1rem;
+        }
+    </style>
+    """, unsafe_allow_html=True
+)
+
+tabs = ["Home", "Obesity Prediction", "Calories Calculator", "About Us"]
+page = st.sidebar.radio("Navigation", tabs)
 
 # Home Page
 if page == "Home":
@@ -148,17 +190,6 @@ elif page == "Obesity Prediction":
         st.markdown(new_title, unsafe_allow_html=True)
         st.markdown("Healthy BMI range: 18.5 kg/m² - 25 kg/m².")
 
-        # Display calories calculator result
-        st.header('Calories Calculator')
-        maintain_calories = person.calories_calculator()
-        st.write('The results show a number of daily calorie estimates that can be used as a guideline for how many calories to consume each day to maintain, lose, or gain weight at a chosen rate.')
-        plans = ["Maintain weight", "Mild weight loss", "Weight loss", "Extreme weight loss"]
-        weights = [1, 0.9, 0.8, 0.6]
-        losses = ['-0 kg/week', '-0.25 kg/week', '-0.5 kg/week', '-1 kg/week']
-        for plan, weight_factor, loss, col in zip(plans, weights, losses, st.columns(4)):
-            with col:
-                st.metric(label=plan, value=f'{round(maintain_calories * weight_factor)} Calories/day', delta=loss, delta_color="inverse")
-
 # Calories Calculator Page
 elif page == "Calories Calculator":
     st.header("Calories Calculator")
@@ -169,16 +200,17 @@ elif page == "Calories Calculator":
         st.image(image, caption='Uploaded Image', use_column_width=True)
         bytes_data = uploaded_file.getvalue()
         
-        prompt = """You are a nutritionist and given an uploaded image of a meal, calculate the calories for each individual food item present 
-                 and provide the results in separate lines. Additionally, include a line for the total calorie count 
-                 of the entire meal. Please specify any key factors affecting the calculation, such as portion size 
-                 or specific ingredients visible in the image. Ensure the calorie estimates are as accurate as 
-                 possible based on the visual information provided.
-                 Results should should be in the format 
-                 1. Item1- number of calories
-                    ----
-                    ----
-                 and so on"""
+        prompt=""" You are a nutritionist and given an uploaded image of a meal, calculate the calories for each individual food item present 
+             and provide the results in separate lines. Additionally, include a line for the total calorie count 
+             of the entire meal. Please specify any key factors affecting the calculation, such as portion size 
+             or specific ingredients visible in the image. Ensure the calorie estimates are as accurate as 
+             possible based on the visual information provided.
+             Results should should be in the format 
+             1. Item1- number of calories
+                ----
+                ----
+             and so on"""
+
 
         generate = st.button("Calculate")
         if generate:
@@ -203,7 +235,8 @@ elif page == "Calories Calculator":
                 st.write(response.text)
             except:
                 st.write("Error! Check the prompt or uploaded image")
-else:
-    # About Us Page
+
+# About Us Page
+elif page == "About Us":
     st.title("About Us")
-    st.write("About us content goes here...")
+    st.write("About Us page content goes here...")
