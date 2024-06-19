@@ -4,6 +4,10 @@ import pandas as pd
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
 from PIL import Image
+import os
+from dotenv import load_dotenv
+
+load_dotenv() ## load all the environment variables
 
 # Set the app configuration
 st.set_page_config(page_title="FitCheckr", page_icon="🔥", layout="wide", initial_sidebar_state='expanded')
@@ -58,8 +62,7 @@ class Person:
         return maintain_calories
 
 # Configure Google Generative AI
-API_KEY = "AIzaSyAo9yfpvJACfzgxPyX3cj3FkSoV4wUy3nY"
-genai.configure(api_key=API_KEY)
+genai.configure(api_key=os.getenv("API_KEY"))
 
 # Navigation Bar
 page = st.sidebar.selectbox("Navigation", ["Home", "Obesity Prediction", "Calories Calculator", "About Us"])
@@ -84,18 +87,13 @@ elif page == "Obesity Prediction":
 
     # Gender selection
     gender = st.selectbox("Gender", options=["Male", "Female"])
-
-    # Physical activity inputs
-    # moderate_activity = st.slider("Moderate Physical Activity (level)", min_value=0, max_value=6, value=1)
-    # vigorous_activity = st.slider("Vigorous Physical Activity (level)", min_value=0, max_value=6, value=1)
-    # daily_activity = st.slider("Daily Physical Activity (level)", min_value=0, max_value=6, value=1)
     activity = st.select_slider('Activity',options=['Little/no exercise', 'Light exercise', 'Moderate exercise (3-5 days/wk)', 'Very active (6-7 days/wk)', 
     'Extra active (very active & physical job)'])
 
     # Predict button
     if st.button("Predict"):
         # Calculate BMI
-        person = Person(age, height, weight, gender, 'Moderate exercise (3-5 days/wk)')  # For calorie calculations
+        person = Person(age, height, weight, gender, activity)  # For calorie calculations
         height_m = height / 100
         bmi_calculated = weight / (height_m ** 2)
 
@@ -107,9 +105,6 @@ elif page == "Obesity Prediction":
             'Height': [height],
             'Zone': [zone],
             'Gender': [gender],
-            # 'Moderatephysicalactivity': [moderate_activity],
-            # 'Vigorousphysicalactivity': [vigorous_activity],
-            # 'Dailyphysicalactivity': [daily_activity],
             'Bmi_calculated': [bmi_calculated]
         })
 
