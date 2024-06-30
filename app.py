@@ -13,7 +13,7 @@ import base64
 load_dotenv() ## load all the environment variables
 
 # Set the app configuration
-st.set_page_config(page_title="FitCheckr", page_icon="🔥", layout="wide", initial_sidebar_state='expanded')
+st.set_page_config(page_title="FitCheck", page_icon="🔥", layout="wide", initial_sidebar_state='expanded')
 
 # Load the trained model
 model = joblib.load('decision_tree_model.pkl')
