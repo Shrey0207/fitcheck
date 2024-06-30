@@ -3,9 +3,12 @@ import joblib
 import pandas as pd
 import google.generativeai as genai
 import google.ai.generativelanguage as glm
-from PIL import Image
 import os
 from dotenv import load_dotenv
+from PIL import Image, ImageDraw
+import requests
+from io import BytesIO
+import base64
 
 load_dotenv() ## load all the environment variables
 
@@ -14,6 +17,37 @@ st.set_page_config(page_title="FitCheckr", page_icon="🔥", layout="wide", init
 
 # Load the trained model
 model = joblib.load('decision_tree_model.pkl')
+
+
+##
+def make_image_round(image_path, size):
+    image = Image.open(image_path).convert("RGBA")
+    image = image.resize((size, size), Image.LANCZOS)
+
+    # Create a mask to make the image round
+    mask = Image.new("L", (size, size), 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0, size, size), fill=255)
+
+    # Apply the mask to the image
+    round_image = Image.new("RGBA", (size, size))
+    round_image.paste(image, (0, 0), mask=mask)
+    
+    return round_image
+
+##
+def get_image_base64(image):
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    return img_str
+
+# Local image paths
+professor_image_path = "./assets/prof.jpeg"
+team1_image_path = "./assets/team1.jpg"
+team2_image_path = "./assets/team2.jpg"
+team3_image_path = "./assets/team3.jpg"
+
 
 # Define the Person class for BMI, BMR, and calorie calculations
 class Person:
@@ -65,12 +99,55 @@ class Person:
 genai.configure(api_key=os.getenv("API_KEY"))
 
 # Navigation Bar
-page = st.sidebar.selectbox("Navigation", ["Home", "Obesity Prediction", "Calories Calculator", "About Us"])
+page = st.sidebar.selectbox("FitCheck", ["Home", "Obesity Prediction", "Calorie Calculator", "About Us"])
 
 # Home Page
 if page == "Home":
-    st.title("Welcome to FitCheckr")
-    st.write("Home page content goes here...")
+    st.title("Welcome to FitCheck")
+    st.write("FitCheck is designed to help you monitor and improve your health. Here are the key features:")
+
+    # Feature 1: Machine Learning Model
+    st.header("1. Weight Level Prediction")
+    st.markdown("""
+    FitCheck uses a decision tree algorithm to predict the weight level of a person based on factors such as weight, height, gender, age, waist size, and geographical location. This model emphasizes the impact of abdominal obesity, a prevalent issue in India.
+    """)
+
+    # Feature 2: Calorie Recommendation
+    st.header("2. Calorie Recommendation")
+    st.markdown("""
+    FitCheck advises users on their calorie intake based on their desired weight loss goals:
+    
+    - **Maintain Weight:** Calories required to maintain current weight.
+    - **Mild Weight Loss (0.25 kg/week):** Calories adjusted for mild weight loss goals.
+    - **Weight Loss (0.5 kg/week):** Calories adjusted for moderate weight loss goals.
+    - **Extreme Weight Loss (1 kg/week):** Calories adjusted for aggressive weight loss goals.
+    
+    This calculation considers the user's basal metabolic rate (BMR) and physical activity level categorized as:
+    
+    - **Little/No Exercise**
+    - **Light Exercise**
+    - **Moderate Exercise (3-5 days/week)**
+    - **Very Active (6-7 days/week)**
+    - **Extra Active (Physically demanding job)**
+    """)
+
+    # Feature 3: Calorie Calculator App
+    st.header("3. Calorie Calculator")
+    st.markdown("""
+    FitCheck includes a calorie calculator app powered by Google's Gemini Pro Vision model. This tool analyzes food images to accurately calculate total calories, helping users track their calorie intake effectively.
+    """)
+
+    # Additional content or sections can be added as needed
+    
+    # Adding style for circular images and Font Awesome icons (if applicable)
+    st.markdown("""
+    <style>
+        /* Add additional CSS styles specific to your content here */
+    </style>
+    """, unsafe_allow_html=True)
+
+    # End of main content
+
 
 # Obesity Prediction Page
 elif page == "Obesity Prediction":
@@ -83,7 +160,7 @@ elif page == "Obesity Prediction":
     height = st.number_input("Height (cm)", min_value=50, max_value=250, value=170)
 
     # Zone selection
-    zone = st.selectbox("Zone", options=["N", "S", "E", "W", "NW", "NE", "SW", "SE"])
+    zone = st.selectbox("Zone", options=["N", "S", "E", "W", "NW", "NE"])
 
     # Gender selection
     gender = st.selectbox("Gender", options=["Male", "Female"])
@@ -157,7 +234,7 @@ elif page == "Obesity Prediction":
                 st.metric(label=plan, value=f'{round(maintain_calories * weight_factor)} Calories/day', delta=loss, delta_color="inverse")
 
 # Calories Calculator Page
-elif page == "Calories Calculator":
+elif page == "Calorie Calculator":
     st.title("Gemini NutriAI 🍽️")
     # Sidebar guide
     st.sidebar.markdown("""
@@ -226,6 +303,79 @@ elif page == "Calories Calculator":
         st.write(response)
 
 else:
-    # About Us Page
     st.title("About Us")
-    st.write("About us content goes here...")
+        # Professor Section
+    st.header("Project Guide")
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        professor_image = make_image_round(professor_image_path, 150)
+        professor_image_base64 = get_image_base64(professor_image)
+        st.markdown(f"""
+        <div class="card">
+            <img src="data:image/png;base64,{professor_image_base64}">
+            <div class="container">
+                <b>Dr Vinpin Chandra Pal</b><br>
+                <a href="mailto:vipin@ei.nits.ac.in"><i class="fa fa-envelope"></i></a>
+                <a href="http://eie.nits.ac.in/vipin/"><i class="fa fa-globe"></i></a>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    # Team Section
+    st.header("Our Team")
+    team_members = [
+        {"name": "Shrey Tolasaria", "image_path": team1_image_path, "email": "shreytolasaria4297@gmail.com", "linkedin": "https://www.linkedin.com/in/shrey-tolasaria-176381231/", "github": "https://github.com/Shrey0207"},
+        {"name": "Kaushik Borah", "image_path": team2_image_path, "email": "kaushikborah4080@gmail.com", "linkedin": "https://www.linkedin.com/in/kaushik-borah-317758226/", "github": "https://github.com/dngeonMaster1706"},
+        {"name": "Hritik Baranwal ", "image_path": team3_image_path, "email": "hritik21_ug@ei.nits.ac.in", "linkedin": "https://www.linkedin.com/in/hritik-baranwal-b65729237/", "github": "https://github.com/hritik06"}
+    ]
+
+    cols = st.columns(3)
+
+    for idx, member in enumerate(team_members):
+        with cols[idx]:
+            member_image = make_image_round(member["image_path"], 100)
+            member_image_base64 = get_image_base64(member_image)
+            st.markdown(f"""
+            <div class="card">
+                <img src="data:image/png;base64,{member_image_base64}">
+                <div class="container">
+                    <b>{member['name']}</b><br>
+                    <a href="mailto:{member['email']}"><i class="fa fa-envelope"></i></a>
+                    <a href="{member['linkedin']}"><i class="fa fa-linkedin"></i></a>
+                    <a href="{member['github']}"><i class="fa fa-github"></i></a>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+# Adding style for circular images and Font Awesome icons
+st.markdown("""
+<style>
+    .card {
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        transition: 0.3s;
+        width: 80%;
+        border-radius: 10px;
+        text-align: center;
+        margin: 10px auto;
+        padding: 10px;
+    }
+    .card img {
+        border-radius: 50%;
+        width: 50%;
+        margin: 10px 0;
+    }
+    .container {
+        padding: 2px 16px;
+    }
+    .fa {
+        font-size: 20px;
+        margin: 0 10px;
+    }
+    .fa:hover {
+        color: #1e90ff;
+    }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+""", unsafe_allow_html=True)
+    
