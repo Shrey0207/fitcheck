@@ -315,7 +315,7 @@ else:
         <div class="card">
             <img src="data:image/png;base64,{professor_image_base64}">
             <div class="container">
-                <b>Dr Vinpin Chandra Pal</b><br>
+                <b>Dr Vipin Chandra Pal</b><br>
                 <a href="mailto:vipin@ei.nits.ac.in"><i class="fa fa-envelope"></i></a>
                 <a href="http://eie.nits.ac.in/vipin/"><i class="fa fa-globe"></i></a>
             </div>
